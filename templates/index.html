@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <canvas id="barChart"></canvas>
+        <canvas id="lineChart"></canvas>
+    </div>
+
+    <script>
+        // Função para gerar um número aleatório entre um intervalo específico
+        function getRandomNumber(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Função para gerar um conjunto de dados aleatórios
+        function generateRandomData() {
+            var data = [];
+            for (var i = 0; i < 6; i++) {
+                data.push(getRandomNumber(1, 10));
+            }
+            return data;
+        }
+
+        // Criar os gráficos iniciais com dados aleatórios
+        var barChartData = {
+            labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'],
+            datasets: [{
+                label: 'Vendas',
+                data: generateRandomData(),
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        var lineChartData = {
+            labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'],
+            datasets: [{
+                label: 'Receita',
+                data: generateRandomData(),
+                fill: false,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        // Renderizar os gráficos iniciais
+        var barChart = new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: barChartData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        var lineChart = new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: lineChartData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Atualizar os gráficos a cada segundo com novos dados aleatórios
+        setInterval(function() {
+            barChart.data.datasets[0].data = generateRandomData();
+            barChart.update();
+            lineChart.data.datasets[0].data = generateRandomData();
+            lineChart.update();
+        }, 1000);
+    </script>
+
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</body>
+</html>
