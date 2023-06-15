@@ -5,9 +5,40 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+        <aside id='header'>
+          <section class="profile">
+            </div>
+          </section>
+          <nav id="navbar" class="nav-menu">
+            <ul class="nav flex-column">
+     
+            </ul>
+          </nav>
+        </aside>
+
+
     <div class="container">
-        <canvas id="barChart"></canvas>
-        <canvas id="lineChart"></canvas>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Medidor de Consumo Hidrico</h1>
+        </div>
+        <div class="content">
+            <div class="widget">
+                <h2 class="widget-title">Consumo por Mes </h2>
+                <p class="widget-content"></p>
+                <div>
+                <canvas id="barChart"></canvas>
+                </div>
+            </div>
+            <div class="widget">
+                <h2 class="widget-title">Consumo</h2>
+                <p class="widget-content"></p>
+                <div>
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -29,7 +60,7 @@
         var barChartData = {
             labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'],
             datasets: [{
-                label: 'Vendas',
+                label: 'Consumo Por mes ',
                 data: generateRandomData(),
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
@@ -40,7 +71,7 @@
         var lineChartData = {
             labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'],
             datasets: [{
-                label: 'Receita',
+                label: 'Consumo',
                 data: generateRandomData(),
                 fill: false,
                 borderColor: 'rgba(75, 192, 192, 1)',
@@ -81,14 +112,69 @@
             lineChart.update();
         }, 1000);
     </script>
-
+<!-- 
     <style>
         .container {
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
+            /* align-items: center; */
+            height: 35vh;
+        }
+    </style> -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 24px;
+        }
+        
+        .content {
+            background-color: #fff;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .widget {
+            background-color: #f9f9f9;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .widget-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .widget-content {
+            font-size: 16px;
         }
     </style>
+
+<footer id="footer">
+    <div class="container">
+      <div class="text-center">
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

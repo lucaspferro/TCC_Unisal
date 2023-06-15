@@ -597,3 +597,74 @@ window.Apex = {
   
   
   }, 3000);
+  /* abre menu lateral no mobile*/
+
+const menuMobile = document.querySelector(".menu-mobile");
+const body = document.querySelector("body");
+
+menuMobile.addEventListener("click", () => {
+  menuMobile.classList.contains("bi-list")
+    ? menuMobile.classList.replace("bi-list", "bi-x")
+    : menuMobile.classList.replace("bi-x", "bi-list");
+  body.classList.toggle("menu-nav-active");
+});
+/* Fecha o menu quando clicar em algum item e muda o icone para list */
+
+const navItem = document.querySelectorAll(".nav-item");
+
+navItem.forEach((item) => {
+  item.addEventListener("click", () => {
+    if (body.classList.contains("menu-nav-active")) {
+      body.classList.remove("menu-nav-active");
+      menuMobile.classList.replace("bi-x", "bi-list");
+    }
+  });
+});
+
+const btnEnviar = document.querySelector('#btn-enviar')
+const btnEnviarLoader = document.querySelector('#btn-enviar-loader')
+
+btnEnviar.addEventListener("click", ()=>{
+  btnEnviarLoader.style.display = "block";
+  btnEnviar.style.display = "none"
+})
+
+/**
+Caso passe true, você pode selecionar multiplas linhas.
+Caso passe false, você só pode selecionar uma linha por vez.
+**/
+function selLinha(linha, multiplos){
+	if(!multiplos){
+  	var linhas = linha.parentElement.getElementsByTagName("tr");
+    for(var i = 0; i < linhas.length; i++){
+      var linha_ = linhas[i];
+      linha_.classList.remove("selecionado");    
+    }
+  }
+  linha.classList.toggle("selecionado");
+}
+
+/**
+Exemplo de como capturar os dados
+**/
+var btnVisualizar = document.getElementById("visualizarDados");
+
+btnVisualizar.addEventListener("click", function(){
+	var selecionados = tabela.getElementsByClassName("selecionado");
+  // Verificar se eestá selecionado
+  if(selecionados.length < 1){
+  	alert("Selecione pelo menos uma linha");
+    return false;
+  }
+  
+  var dados = "";
+  
+  for(var i = 0; i < selecionados.length; i++){
+  	var selecionado = selecionados[i];
+    selecionado = selecionado.getElementsByTagName("td");
+    dados += "ID: " + selecionado[0].innerHTML + " - Nome: " + selecionado[1].innerHTML + " - Idade: " + selecionado[2].innerHTML + "\n";
+  }
+  
+  alert(dados);
+});
+
