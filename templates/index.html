@@ -25,8 +25,8 @@
         </div>
         <div class="content">
             <div class="widget">
-                <h2 class="widget-title">Consumo por Mes </h2>
-                <p class="widget-content"></p>
+                <h2 class="widget-title">Consumo por Mes (m³) </h2>
+                <p class="widget-content">--1m³ equivale a 1.000 litros de água--</p>
                 <div>
                 <canvas id="barChart"></canvas>
                 </div>
@@ -50,32 +50,32 @@
         // Função para gerar um conjunto de dados aleatórios
         function generateRandomData() {
             var data = [];
-            for (var i = 0; i < 6; i++) {
-                data.push(getRandomNumber(1, 10));
+            for (var i = 0; i < 11; i++) {
+                data.push(getRandomNumber(1, 100));
             }
             return data;
         }
 
         // Criar os gráficos iniciais com dados aleatórios
         var barChartData = {
-            labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'],
+            labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto','Setembro', 'Outubro', 'Novembro','Dezembro'],
             datasets: [{
                 label: 'Consumo Por mes ',
                 data: generateRandomData(),
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
+                borderWidth: 2
             }]
         };
 
         var lineChartData = {
-            labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'],
+            labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto','Setembro', 'Outubro', 'Novembro','Dezembro'],
             datasets: [{
                 label: 'Consumo',
                 data: generateRandomData(),
                 fill: false,
                 borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
+                borderWidth: 2
             }]
         };
 
@@ -106,8 +106,8 @@
 
         // Atualizar os gráficos a cada segundo com novos dados aleatórios
         setInterval(function() {
-            barChart.data.datasets[0].data = generateRandomData();
-            barChart.update();
+            // barChart.data.datasets[0].data = generateRandomData();
+            // barChart.update();
             lineChart.data.datasets[0].data = generateRandomData();
             lineChart.update();
         }, 1000);
