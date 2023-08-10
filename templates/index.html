@@ -56,6 +56,7 @@
             return data;
         }
 
+
         // Criar os gráficos iniciais com dados aleatórios
         var barChartData = {
             labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto','Setembro', 'Outubro', 'Novembro','Dezembro'],
@@ -67,9 +68,21 @@
                 borderWidth: 2
             }]
         };
-
         var lineChartData = {
-            labels: ['','','','','','','','','','','','',],
+            labels: [
+            'Reservatorio 1',
+            'Reservatorio 2',
+            'Reservatorio 3',
+            'Reservatorio 4',
+            'Reservatorio 5',
+            'Reservatorio 6',
+            'Reservatorio 7',
+            'Reservatorio 8',
+            'Reservatorio 9',
+            'Reservatorio 10',
+            'Reservatorio 11',
+            'Reservatorio 12',
+        ],
             datasets: [{
                 label: 'Consumo (Litros/Seg)',
                 data: generateRandomData(),
@@ -78,7 +91,6 @@
                 borderWidth: 2
             }]
         };
-
         // Renderizar os gráficos iniciais
         var barChart = new Chart(document.getElementById('barChart'), {
             type: 'bar',
@@ -91,9 +103,8 @@
                 }
             }
         });
-
         var lineChart = new Chart(document.getElementById('lineChart'), {
-            type: 'line',
+            type: 'radar',
             data: lineChartData,
             options: {
                 scales: {
@@ -103,14 +114,13 @@
                 }
             }
         });
-
         // Atualizar os gráficos a cada segundo com novos dados aleatórios
         setInterval(function() {
             // barChart.data.datasets[0].data = generateRandomData();
             // barChart.update();
             lineChart.data.datasets[0].data = generateRandomData();
             lineChart.update();
-        }, 1000);
+        }, 2000);
     </script>
 <!-- 
     <style>
