@@ -1,4 +1,4 @@
-# Protótipo de Gerenciador de Consumo Hídrico Residencial 
+# Dispositivo MHR Monitoramento Hidrico Residencial
 
 ## TCC_Unisal
 
