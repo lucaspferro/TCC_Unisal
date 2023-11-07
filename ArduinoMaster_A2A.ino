@@ -3,6 +3,7 @@
 #include <Adafruit_MQTT_Client.h>
 #include <ESP8266WiFi.h>
 #include <A2a.h>
+#define endereco 0x08
 
 A2a arduinoMaster;
 
