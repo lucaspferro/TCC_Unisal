@@ -7,11 +7,11 @@
 #define tempoAtualizacao 5000
 
 // INSTANCIANDO OBJETOS
-AdafruitIO_Feed *counter = io.feed("counter");
-AdafruitIO_Feed *frequencia = io.feed("frequencia");
-AdafruitIO_Feed *corrente = io.feed("corrente");
-AdafruitIO_Feed *fatorpotencia = io.feed("fatorpotencia");
-AdafruitIO_Feed *displayLED = io.feed("displayLED");
+AdafruitIO_Feed *mhr = io.feed("mhr");
+AdafruitIO_Feed *Calculo_vazao_corrente= io.feed("Calculo_vazao_corrente");
+AdafruitIO_Feed *sensor-vazao = io.feed("sensor-vazao");
+AdafruitIO_Feed *reset = io.feed("reset");
+AdafruitIO_Feed *Botao_valvula = io.feed("Botao_valvula");
 
 A2a arduinoSlave; // esse é o slave 
 
