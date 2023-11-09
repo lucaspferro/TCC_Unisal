@@ -70,7 +70,62 @@ if (millis() > controleTempo + tempoAtualizacao) {
   }
 }
  
+void retornoDisplayLED(AdafruitIO_Data *data) {
+  Serial.print("Controle Recebido <- ");  
+  Serial.println(data->value());
+  
+  arduinoSlave.varWireWrite(endereco, 2, byte(data->toInt()));
+}
 
+//----------------TENSAO---------------------------
+bool monitoraTensao(){
+  static int leituraAnt;
+  
+  byte byte1 = arduinoSlave.varWireRead(endereco, 0);
+  //byte byte2 = arduinoSlave.varWireRead(endereco, 1);
+  unsigned int leitura = byte1;     //<< 8 | byte2;
+  
+  if (leitura != leituraAnt) {
+
+    valorTensao = leitura;
+    
+    leituraAnt = leitura;
+    return true;
+  }
+    
+}
+//------------------FREQUENCIA---------------------//
+bool monitoraFrequencia(){
+  static int leituraAnt;
+  
+  byte testeFreq = arduinoSlave.varWireRead(endereco, 2);
+  byte byte2 = arduinoSlave.varWireRead(endereco, 3);
+  unsigned int leitura = testeFreq << 8 | byte2;
+  
+  if (leitura != leituraAnt) {
+
+    valorFrequencia = leitura;
+    
+    leituraAnt = leitura;
+    return true;
+  }
+}
+//-------------------FATOR POTENCIA---------------//
+
+bool monitorafatorPotencia(){
+  static int leituraAnt;
+  
+  byte byte1 = arduinoSlave.varWireRead(endereco, 4);
+  //byte byte2 = arduinoSlave.varWireRead(endereco, 5);
+  unsigned int leitura = byte1; //<< 8 | byte2;
+  
+  if (leitura != leituraAnt) {
+
+    valorFP = leitura;
+    
+    leituraAnt = leitura;
+    return true;
+  }
 
 void receiveEvent(int bytes) {
  if (Serial.available() > 0) {
