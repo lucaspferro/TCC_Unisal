@@ -1,152 +1,86 @@
-// INCLUSÃO DE BIBLIOTECAS
-#include <A2a.h>
-#include "config.h"
+#include <Wire.h>
+#include <Adafruit_MQTT.h>
+#include <Adafruit_MQTT_Client.h>
 
-// DEFINIÇÕES
-#define endereco 0x08
-#define tempoAtualizacao 5000
+#define MY_ADDRESS 8  // Endereço I2C do ESP8266
+#define ADAFRUIT_SERVER "io.adafruit.com"
+#define ADAFRUIT_PORT   1883
+#define ADAFRUIT_USERNAME "seu_usuario_adafruit"
+#define ADAFRUIT_KEY "seu_chave_adafruit"
 
-// INSTANCIANDO OBJETOS
-AdafruitIO_Feed *mhr = io.feed("mhr");
-AdafruitIO_Feed *Calculo_vazao_corrente= io.feed("Calculo_vazao_corrente");
-AdafruitIO_Feed *sensor-vazao = io.feed("sensor-vazao");
-AdafruitIO_Feed *reset = io.feed("reset");
-AdafruitIO_Feed *Botao_valvula = io.feed("Botao_valvula");
+// Defina os tópicos MQTT e os feeds do Adafruit
+Adafruit_MQTT_Client mqtt(&WiFiClient, ADAFRUIT_SERVER, ADAFRUIT_PORT, ADAFRUIT_USERNAME, ADAFRUIT_KEY);
 
-A2a arduinoSlave; // esse é o slave 
+// Defina o feed no qual você deseja publicar os dados
+Adafruit_MQTT_Publish feedVoltage = Adafruit_MQTT_Publish(&mqtt, ADAFRUIT_USERNAME "/feeds/mhr");
+Adafruit_MQTT_Publish feedFlowRate = Adafruit_MQTT_Publish(&mqtt, ADAFRUIT_USERNAME "/feeds/Calculo_vazao_corrente");
 
-// DECLARAÇÃO DE FUNÇÕES
-void configuraMQTT();
-void retornoDisplayLED(AdafruitIO_Data *data);
-bool monitoraTensao ();
-bool monitoraFrequencia();
-bool monitorafatorPotencia();
 
-// DECLARAÇÃO DE VARIÁVEIS
-unsigned long controleTempo = 0;
-bool comandoRecebido = false;
-unsigned int valorTensao, valorFrequencia, valorFP;
+void receiveEvent() {
+  while (Wire.available()) {
+    char identificador = Wire.read();
+    
+
+  }
+} 
+void receiveEvent(int bytes) {
+  if (bytes >= sizeof(float) * 2) {
+    float voltage = 0.0;
+    float flowRate = 0.0;
+
+    Wire.readBytes((byte*)&voltage, sizeof(float));
+    Wire.readBytes((byte*)&flowRate, sizeof(float));
+
+    // Faça algo com os dados recebidos, por exemplo, imprimir no Serial Monitor
+    Serial.print("Dados Recebidos do Arduino - Tensão: ");
+    Serial.print(voltage, 2);
+    Serial.print(" V, Fluxo: ");
+    Serial.print(flowRate, 2);
+    Serial.println(" L/min");
+  }
+          // Publica os dados nos feeds do Adafruit
+    if (feedVoltage.publish(voltage)) {
+      Serial.println("Dados de tensão publicados com sucesso no Adafruit!");
+    } else {
+      Serial.println("Erro ao publicar dados de tensão no Adafruit.");
+    }
+
+    if (feedFlowRate.publish(flowRate)) {
+      Serial.println("Dados de fluxo publicados com sucesso no Adafruit!");
+    } else {
+      Serial.println("Erro ao publicar dados de fluxo no Adafruit.");
+    }
+  }
+
+
+
 
 void setup() {
-   Serial.begin(9600);
-  while (! Serial);
-
-  configuraMQTT();
-
-  arduinoSlave.begin(0, 2);
-
-  Serial.println("Atualizando valor do Display de LED");
-  
-  displayLED->get();
-  io.run();
-  
-  Serial.println("Fim Setup");
- 
+  Serial.begin(9600);
+  Wire.begin(MY_ADDRESS);  // Inicializa a comunicação I2C e define o endereço do ESP8266
+  Wire.onReceive(receiveEvent);  // Configura a função de recebimento de dados
+  // Conecta-se à rede Wi-Fi
+  // Substitua "SSID" e "PASSWORD" pelos detalhes da sua rede Wi-Fi
+  WiFi.begin("SSID", "PASSWORD");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Conectando à rede Wi-Fi...");
+  }
+  Serial.println("Conectado à rede Wi-Fi.");
 }
 
 void loop() {
-    io.run(); 
-// --------------------TENSAO-----------------------// 
-  if (millis() > controleTempo + tempoAtualizacao) {
-   if (monitoraTensao()) {
-      controleTempo = millis();
-        counter->save(valorTensao);
-        Serial.println(valorTensao);    }
-  }
-//---------frequencia------------------------------
-  if (millis() > controleTempo + tempoAtualizacao) {
-    if (monitoraFrequencia()) {
-      controleTempo = millis();
-        frequencia->save(valorFrequencia);
-        Serial.println(valorFrequencia);    }
-  }
-//------------fator potencia-------------------
-  
-if (millis() > controleTempo + tempoAtualizacao) {
-    if (monitorafatorPotencia()) {
-      controleTempo = millis();
-        fatorpotencia->save(valorFP);
-        Serial.println(valorFP);    }
-  }
-}
- 
-void retornoDisplayLED(AdafruitIO_Data *data) {
-  Serial.print("Controle Recebido <- ");  
-  Serial.println(data->value());
-  
-  arduinoSlave.varWireWrite(endereco, 2, byte(data->toInt()));
-}
-
-//----------------TENSAO---------------------------
-bool monitoraTensao(){
-  static int leituraAnt;
-  
-  byte byte1 = arduinoSlave.varWireRead(endereco, 0);
-  //byte byte2 = arduinoSlave.varWireRead(endereco, 1);
-  unsigned int leitura = byte1;     //<< 8 | byte2;
-  
-  if (leitura != leituraAnt) {
-
-    valorTensao = leitura;
-    
-    leituraAnt = leitura;
-    return true;
-  }
-    
-}
-//------------------FREQUENCIA---------------------//
-bool monitoraFrequencia(){
-  static int leituraAnt;
-  
-  byte testeFreq = arduinoSlave.varWireRead(endereco, 2);
-  byte byte2 = arduinoSlave.varWireRead(endereco, 3);
-  unsigned int leitura = testeFreq << 8 | byte2;
-  
-  if (leitura != leituraAnt) {
-
-    valorFrequencia = leitura;
-    
-    leituraAnt = leitura;
-    return true;
-  }
-}
-//-------------------FATOR POTENCIA---------------//
-
-bool monitorafatorPotencia(){
-  static int leituraAnt;
-  
-  byte byte1 = arduinoSlave.varWireRead(endereco, 4);
-  //byte byte2 = arduinoSlave.varWireRead(endereco, 5);
-  unsigned int leitura = byte1; //<< 8 | byte2;
-  
-  if (leitura != leituraAnt) {
-
-    valorFP = leitura;
-    
-    leituraAnt = leitura;
-    return true;
-  }
-
-void receiveEvent(int bytes) {
- if (Serial.available() > 0) {
-    String receivedData = Serial.readString();
-    
-    if (receivedData == "1") {
-      digitalWrite(relayPin, HIGH); // Liga o relé
-      Serial.println("Relé ligado");
-    } else if (receivedData == "0") {
-      digitalWrite(relayPin, LOW); // Desliga o relé
-      Serial.println("Relé desligado");
+  // Mantenha a conexão MQTT ativa
+  if (!mqtt.connected()) {
+    Serial.println("Conectando ao broker MQTT...");
+    if (mqtt.connect()) {
+      Serial.println("Conectado ao broker MQTT!");
+    } else {
+      Serial.println("Falha na conexão MQTT. Tente novamente em 10 segundos.");
+      delay(2000);
     }
   }
-}
-void sendData() {
-  // Quando o Arduino Mestre solicitar dados, envie a tensão lida
-  int sensorValue = analogRead(sensorPin);
-  float voltage = (sensorValue / 1023.0) * 5.0; // Converta o valor para tensão (5V como referência)
 
-  // Envie os dados para o Arduino Mestre
-  byte data[4];
-  memcpy(data, &voltage, sizeof(voltage));
-  Wire.write(data, sizeof(data));
+  // Loop MQTT para manter a conexão
+  mqtt.loop();
 }
