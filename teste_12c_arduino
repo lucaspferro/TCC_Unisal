@@ -1,0 +1,27 @@
+#include <SoftSerial.h>
+
+SoftSerial mySerial(A3, A2); //rx tx
+
+void setup (){
+//open serial comunications and wait for pórt to open
+  Serial.begin(9600);
+  Serial.println("oi");
+//set the data rate for the sofserial port 
+
+  mySerial.begin(9600);
+
+
+}
+void loop(){
+  if (mySerial.available()){
+    Serial.write(mySerial.read());
+
+  }
+  if (Serial.available()){
+    mySerial.write(Serial.read());
+    
+  }
+
+
+
+}
