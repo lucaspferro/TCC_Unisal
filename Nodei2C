@@ -1,0 +1,24 @@
+
+void setup (){
+//open serial comunications and wait for pórt to open
+  Serial.begin(9600);
+  Serial.println("oi");
+//set the data rate for the sofserial port 
+
+  Serial2.begin(9600);
+
+
+}
+void loop(){
+  if (Serial2.available()){
+    Serial.write(Serial2.read());
+
+  }
+  if (Serial.available()){
+    Serial2.write(Serial2.read());
+    
+  }
+
+
+
+}
