@@ -1,24 +1,22 @@
+#include <SoftwareSerial.h>
 
-void setup (){
-//open serial comunications and wait for pórt to open
+SoftwareSerial mySerial(D6, D7); // RX, TX
+
+void setup() {
+  // Open serial communications and wait for port to open:
   Serial.begin(9600);
-  Serial.println("oi");
-//set the data rate for the sofserial port 
+ 
+  Serial.println("pppppooioioioioioioioo!");
 
-  Serial2.begin(9600);
-
-
+  // set the data rate for the SoftwareSerial port
+  mySerial.begin(9600);
 }
-void loop(){
-  if (Serial2.available()){
-    Serial.write(Serial2.read());
 
+void loop() { // run over and over
+  if (mySerial.available()) {
+    Serial.write(mySerial.read());
   }
-  if (Serial.available()){
-    Serial2.write(Serial2.read());
-    
+  if (Serial.available()) {
+    mySerial.write(Serial.read());
   }
-
-
-
 }
