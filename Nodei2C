@@ -1,22 +1,110 @@
 #include <SoftwareSerial.h>
-
 SoftwareSerial mySerial(D6, D7); // RX, TX
 
-void setup() {
-  // Open serial communications and wait for port to open:
-  Serial.begin(9600);
  
-  Serial.println("pppppooioioioioioioioo!");
+/************************ Configurações do Adafruit IO *******************************/
+//Insira seu nome de usuário e chave. Você encontra essas informações acessando
+//sua conta no Adafruit IO
+#define IO_USERNAME  "mhrunisal"
+#define IO_KEY       "aio_xOaE31AngtR9Jr7nkf3RTASuyS35"
+ 
+/********************* Configuração do WIFI **************************************/
+ 
+//Insira o SSID e Senha da rede WIFI a qual você irá conectar
+#define WIFI_SSID "Rancho"
+#define WIFI_PASS "gixpg300m" 
+ 
+/***************Configurações do comunicaçaão************/
+#include "AdafruitIO_WiFi.h"
+ 
+AdafruitIO_WiFi io(IO_USERNAME, IO_KEY, WIFI_SSID, WIFI_PASS);
+  
+/************************ Configuração dos tópicos *******************************/
+ 
+// configura o tópico "fs_embarcados/feeds/rele_1"
+AdafruitIO_Feed *feedRele1 = io.feed("Botao_valvula");
+ 
+ 
+/************************ Função setup *******************************/
+ 
+void setup() {
 
-  // set the data rate for the SoftwareSerial port
-  mySerial.begin(9600);
+ 
+  // configura comunicação serial
+  Serial.begin(115200);
+ 
+  // Aguarda serial monitor
+  while(! Serial);
+ 
+  conectaBroker(); //função para conectar ao broker
+  mySerial.begin(115200);
+ 
 }
+ 
+/************************ Função loop *******************************/
+ 
+void loop() {
+  // processa as mensagens e mantêm a conexão ativa
+  byte state = io.run();
+ 
+  //verifica se está conectado
+  if(state == AIO_NET_DISCONNECTED | state == AIO_DISCONNECTED){
+    conectaBroker(); //função para conectar ao broker
+  }
+ 
+}
+ 
+/****** Função de tratamento dos dados recebidos em L1***************/
+ 
+void handleRele1(AdafruitIO_Data *data) {
+ 
+  // Mensagem
+  Serial.print("Recebido  <- ");
+  Serial.print(data->feedName());
+  Serial.print(" : ");
+  int valorBotaoValvula = atoi(data->value());
+  Serial.println(valorBotaoValvula);
 
-void loop() { // run over and over
-  if (mySerial.available()) {
+  // Envie o valor do feed via SoftwareSerial
+  mySerial.print(valorBotaoValvula);
+  
+  
+  // Leia e retransmita a SoftwareSerial para a porta serial padrão
+  while (mySerial.available()) {
     Serial.write(mySerial.read());
   }
-  if (Serial.available()) {
+  
+  // Leia e retransmita a porta serial padrão para SoftwareSerial
+  while (Serial.available()) {
     mySerial.write(Serial.read());
   }
+  
+}
+ 
+ 
+/****** Função para conectar ao WIFI e Broker***************/
+ 
+void conectaBroker(){
+ 
+  //mensagem inicial
+  Serial.print("Conectando ao Adafruit IO");
+ 
+  // chama função de conexão io.adafruit.com
+  io.connect();
+ 
+   // instancia um novo handler para recepção da mensagem do feed Rele
+  feedRele1->onMessage(handleRele1);
+ 
+  // Aguarda conexação ser estabelecida
+  while(io.status() < AIO_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+ 
+  // Conectado
+  Serial.println();
+  Serial.println(io.statusText());
+ 
+  // certifique-se de que todos os feeds obtenham seus valores atuais imediatamente
+  feedRele1->get();
 }
