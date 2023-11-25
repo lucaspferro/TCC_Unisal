@@ -1,22 +1,74 @@
+
 #include <SoftwareSerial.h>
 
 SoftwareSerial mySerial(A3, A2); // RX, TX
 
-void setup() {
-  // Open serial communications and wait for port to open:
-  Serial.begin(9600);
- 
-  Serial.println("pppppooioioioioioioioo!");
+// Pino do sensor de fluxo conectado ao ESP8266 (exemplo: D2)
+const int sensorPin = 4;
+const int RELAY_PIN = 3;  // the Arduino pin, which connects to the IN pin of relay
 
-  // set the data rate for the SoftwareSerial port
-  mySerial.begin(9600);
+//volatile int pulseCount = 0;
+//float flowRate = 0.0; // Taxa de fluxo em L/min
+//unsigned int flowMilliLitres = 0;
+//unsigned long totalMilliLitres = 0;
+//unsigned long oldTime = 0;
+
+// void pulseCounter() {
+//  pulseCount++;
+//}
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("uuuuuuuuuuuuuuuuuuuuuuuuuuuo!");
+//  attachInterrupt(digitalPinToInterrupt(sensorPin), pulseCounter, FALLING);
+  // Configuração da taxa de dados para a porta SoftwareSerial
+  mySerial.begin(115200);
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
 }
 
-void loop() { // run over and over
-  if (mySerial.available()) {
-    Serial.write(mySerial.read());
-  }
-  if (Serial.available()) {
-    mySerial.write(Serial.read());
+void loop() {
+  
+//----Sensor de Fluxo----
+//  unsigned long currentTime = millis();
+//  if (currentTime - oldTime > 1000) {
+//    flowRate = pulseCount / 7.5; // 7.5 é o fator de escala para o sensor YF-S201
+//    flowMilliLitres = (flowRate / 60) * 1000;
+//    totalMilliLitres += flowMilliLitres;
+//    oldTime = currentTime;
+//    Serial.print("Taxa de Vazão: ");
+//    Serial.println(flowRate);
+//    Serial.print("L/min\tFluxo Acumulado: ");
+//    Serial.print(totalMilliLitres);
+//    Serial.println(" mL");
+//    pulseCount = 0;
+//  }
+
+//  mySerial.print(flowRate); // Envie a taxa de fluxo como uma string
+//   if (mySerial.available()) {
+//    Serial.write(mySerial.read());
+//  }
+//  if (Serial.available()) {
+//    mySerial.write(Serial.read());
+//  }
+if (mySerial.available()) {
+    // Lê e imprime os dados recebidos da porta SoftwareSerial
+    int receivedNumber = mySerial.read();
+    Serial.print("status feed: ");
+    Serial.println(receivedNumber);
+//48 status botao ligado
+    if (receivedNumber == 48) {
+      if (digitalRead(RELAY_PIN) == LOW) {
+        digitalWrite(RELAY_PIN, HIGH);
+        Serial.print("liguei ");
+      }
+    }
+//49 status botao desligado
+    if (receivedNumber == 49) {
+      if (digitalRead(RELAY_PIN) == HIGH) {
+        digitalWrite(RELAY_PIN, LOW);
+        Serial.print("desliguei ");
+      }
+    }
   }
 }
