@@ -70,5 +70,19 @@ if (mySerial.available()) {
         Serial.print("desliguei ");
       }
     }
+//50 status botao desligado
+if (receivedNumber == 50) {
+    if (digitalRead(RELAY_PIN) == LOW && fluxoviagem > LIMITE_FLUXO) {
+        Serial.print(fluxoviagem);
+        digitalWrite(RELAY_PIN, HIGH);
+        Serial.println("Relé acionado devido à presença de fluxo no modo viagem");
+    }
+}
+ if (receivedNumber == 51) {
+    if (digitalRead(RELAY_PIN) == HIGH) {
+        digitalWrite(RELAY_PIN, LOW);
+        Serial.print("desliguei ");
+      }
+    }
   }
 }
