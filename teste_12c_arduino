@@ -70,7 +70,9 @@ void loop() {
     tempo_antes = millis();
     //contagem de pulsos do sensor
     attachInterrupt(INTERRUPCAO_SENSOR, contador_pulso, FALLING);
-     mySerial.print(fluxo);
+    mySerial.print("F:");
+    mySerial.print(fluxo);
+    mySerial.print("/n");
   }
   fluxoviagem = fluxo;
   
