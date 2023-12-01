@@ -107,7 +107,21 @@ void modoviagem (AdafruitIO_Data *data) {
   
 }
 void sensorfluxo(AdafruitIO_Data *data) {
- 
+ if(MySerial.available()){
+  String receivedData = mySerial.readStringUntil('/n');
+
+  if(receivedData.startWith("F:")){
+    float receivedFluxo = receivedData.substring(2).toFloat(); // Ignora os primeiros dois caracteres ("F:") e converte para float
+        Serial.print("Fluxo recebido: ");
+        Serial.println(receivedFluxo);
+        // Faça o que você precisa com a variável receivedFluxo
+    } else {
+        // Mensagem não reconhecida
+        Serial.print("Mensagem não reconhecida: ");
+        Serial.println(receivedData);
+    }
+  }
+ }
   // Mensagem
 //  Serial.print("Recebido mhr  <- ");
 //  Serial.print(data->feedName());
@@ -129,14 +143,6 @@ void sensorfluxo(AdafruitIO_Data *data) {
   while (mySerial.available()) {
     Serial.write(mySerial.read());
   }
-  
-  // Leia e retransmita a porta serial padrão para SoftwareSerial
-//  while (Serial.available()) {
-//    mySerial.write(Serial.read());
-//  }
-  
-}
- 
  
 /** Função para conectar ao WIFI e Broker*******/
  
