@@ -2,35 +2,38 @@
 SoftwareSerial mySerial(D6, D7); // RX, TX
 
  
-/************************ Configurações do Adafruit IO *******************************/
+/******** Configurações do Adafruit IO ***********/
 //Insira seu nome de usuário e chave. Você encontra essas informações acessando
 //sua conta no Adafruit IO
 #define IO_USERNAME  "mhrunisal"
-#define IO_KEY       "aio_xOaE31AngtR9Jr7nkf3RTASuyS35"
+#define IO_KEY       "aio_qReV49kJoX6kDWrPLwtMhsqHciDK"
  
-/********************* Configuração do WIFI **************************************/
+/******* Configuração do WIFI **************/
  
 //Insira o SSID e Senha da rede WIFI a qual você irá conectar
-#define WIFI_SSID "Rancho"
+#define WIFI_SSID "Sala-2"
 #define WIFI_PASS "gixpg300m" 
  
-/***************Configurações do comunicaçaão************/
+/******Configurações do comunicaçaão*****/
 #include "AdafruitIO_WiFi.h"
  
 AdafruitIO_WiFi io(IO_USERNAME, IO_KEY, WIFI_SSID, WIFI_PASS);
   
-/************************ Configuração dos tópicos *******************************/
+/******** Configuração dos tópicos ***********/
  
 // configura o tópico "fs_embarcados/feeds/rele_1"
 AdafruitIO_Feed *feedRele1 = io.feed("Botao_valvula");
+AdafruitIO_Feed *feedmhr = io.feed("mhr");
+AdafruitIO_Feed *feedSensor_vazao = io.feed("Sensor_vazao");
+
  
  
-/************************ Função setup *******************************/
+/******** Função setup ***********/
  
 void setup() {
 
  
-  // configura comunicação serial
+  // configura comunicação serial0
   Serial.begin(115200);
  
   // Aguarda serial monitor
@@ -41,7 +44,7 @@ void setup() {
  
 }
  
-/************************ Função loop *******************************/
+/******** Função loop ***********/
  
 void loop() {
   // processa as mensagens e mantêm a conexão ativa
@@ -51,10 +54,9 @@ void loop() {
   if(state == AIO_NET_DISCONNECTED | state == AIO_DISCONNECTED){
     conectaBroker(); //função para conectar ao broker
   }
- 
 }
  
-/****** Função de tratamento dos dados recebidos em L1***************/
+/** Função de tratamento dos dados recebidos em L1*******/
  
 void handleRele1(AdafruitIO_Data *data) {
  
@@ -69,6 +71,30 @@ void handleRele1(AdafruitIO_Data *data) {
   mySerial.print(valorBotaoValvula);
   
   
+//  // Leia e retransmita a SoftwareSerial para a porta serial padrão
+  while (mySerial.available()) {
+    Serial.write(mySerial.read());
+  }
+  
+  // Leia e retransmita a porta serial padrão para SoftwareSerial
+  while (Serial.available()) {
+    mySerial.write(Serial.read());
+  }
+  
+}
+void modoviagem (AdafruitIO_Data *data) {
+ 
+  // Mensagem
+  Serial.print("Recebido mhr  <- ");
+  Serial.print(data->feedName());
+  Serial.print(" : ");
+  int valormhr = atoi(data->value());
+  Serial.println(valormhr);
+
+  // Envie o valor do feed via SoftwareSerial
+  mySerial.print(valormhr);
+  
+  
   // Leia e retransmita a SoftwareSerial para a porta serial padrão
   while (mySerial.available()) {
     Serial.write(mySerial.read());
@@ -80,9 +106,39 @@ void handleRele1(AdafruitIO_Data *data) {
   }
   
 }
+void sensorfluxo(AdafruitIO_Data *data) {
+ 
+  // Mensagem
+//  Serial.print("Recebido mhr  <- ");
+//  Serial.print(data->feedName());
+//  Serial.print(" : ");
+//  int valormhr = atoi(data->value());
+//  Serial.println(valormhr);
+  
+  // Leia os dados da porta serial
+  float valorFluxo = mySerial.read();
+  
+  // Envie o valor do feed via SoftwareSerial
+     feedSensor_vazao->save("50");
+     Serial.print(valorFluxo);
+
+
+  
+  
+  // Leia e retransmita a SoftwareSerial para a porta serial padrão
+  while (mySerial.available()) {
+    Serial.write(mySerial.read());
+  }
+  
+  // Leia e retransmita a porta serial padrão para SoftwareSerial
+//  while (Serial.available()) {
+//    mySerial.write(Serial.read());
+//  }
+  
+}
  
  
-/****** Função para conectar ao WIFI e Broker***************/
+/** Função para conectar ao WIFI e Broker*******/
  
 void conectaBroker(){
  
@@ -94,7 +150,8 @@ void conectaBroker(){
  
    // instancia um novo handler para recepção da mensagem do feed Rele
   feedRele1->onMessage(handleRele1);
- 
+  feedmhr->onMessage(modoviagem);
+  feedSensor_vazao->onMessage(sensorfluxo);
   // Aguarda conexação ser estabelecida
   while(io.status() < AIO_CONNECTED) {
     Serial.print(".");
@@ -107,4 +164,6 @@ void conectaBroker(){
  
   // certifique-se de que todos os feeds obtenham seus valores atuais imediatamente
   feedRele1->get();
+  feedmhr->get();
+//  feedSensor_vazao->save();
 }
