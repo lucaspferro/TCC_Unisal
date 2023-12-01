@@ -1,50 +1,82 @@
-
 #include <SoftwareSerial.h>
 
 SoftwareSerial mySerial(A3, A2); // RX, TX
 
 // Pino do sensor de fluxo conectado ao ESP8266 (exemplo: D2)
-const int sensorPin = 4;
-const int RELAY_PIN = 3;  // the Arduino pin, which connects to the IN pin of relay
+const int INTERRUPCAO_SENSOR = 0; //interrupt = 0 equivale ao pino digital 2
+const int PINO_SENSOR = 2;
+unsigned long contador = 0;
 
-//volatile int pulseCount = 0;
-//float flowRate = 0.0; // Taxa de fluxo em L/min
-//unsigned int flowMilliLitres = 0;
-//unsigned long totalMilliLitres = 0;
-//unsigned long oldTime = 0;
+const int RELAY_PIN = 9;  // the Arduino pin, which connects to the IN pin of relay
 
-// void pulseCounter() {
-//  pulseCount++;
-//}
+//definicao do fator de calibracao para conversao do valor lido
+const float FATOR_CALIBRACAO = 4.5;
+
+//definicao das variaveis de fluxo e volume
+float fluxo = 0;
+float volume = 0;
+float volume_total = 0;
+
+//definicao da variavel de intervalo de tempo
+unsigned long tempo_antes = 0;
+
+float LIMITE_FLUXO = 2;
+float  fluxoviagem = 0;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("uuuuuuuuuuuuuuuuuuuuuuuuuuuo!");
+  pinMode(RELAY_PIN, OUTPUT);
+
+  digitalWrite(RELAY_PIN, LOW);
+  delay(1000);
+  digitalWrite(RELAY_PIN, HIGH);
+
+  Serial.println("uuo!");
 //  attachInterrupt(digitalPinToInterrupt(sensorPin), pulseCounter, FALLING);
   // Configuração da taxa de dados para a porta SoftwareSerial
   mySerial.begin(115200);
-  pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW);
+  
+  //configuracao do pino do sensor como entrada em nivel logico alto
+  pinMode(PINO_SENSOR, INPUT_PULLUP);
+
+  
 }
 
 void loop() {
   
-//----Sensor de Fluxo----
-//  unsigned long currentTime = millis();
-//  if (currentTime - oldTime > 1000) {
-//    flowRate = pulseCount / 7.5; // 7.5 é o fator de escala para o sensor YF-S201
-//    flowMilliLitres = (flowRate / 60) * 1000;
-//    totalMilliLitres += flowMilliLitres;
-//    oldTime = currentTime;
-//    Serial.print("Taxa de Vazão: ");
-//    Serial.println(flowRate);
-//    Serial.print("L/min\tFluxo Acumulado: ");
-//    Serial.print(totalMilliLitres);
-//    Serial.println(" mL");
-//    pulseCount = 0;
-//  }
+// executa a contagem de pulsos uma vez por segundo
+  if((millis() - tempo_antes) > 1000){
 
-//  mySerial.print(flowRate); // Envie a taxa de fluxo como uma string
+    //desabilita a interrupcao para realizar a conversao do valor de pulsos
+    detachInterrupt(INTERRUPCAO_SENSOR);
+    //conversao do valor de pulsos para L/min
+    fluxo = ((1000.0 / (millis() - tempo_antes)) * contador) / FATOR_CALIBRACAO;
+    //exibicao do valor de fluxo
+    Serial.print("Fluxo de: ");
+    Serial.print(fluxo);
+    Serial.println(" L/min");
+    //calculo do volume em L passado pelo sensor
+    volume = fluxo / 60;
+    //armazenamento do volume
+    volume_total += volume;
+    //exibicao do valor de volume
+    Serial.print("Volume: ");
+    Serial.print(volume_total);
+    Serial.println(" L");
+    Serial.println();
+    //reinicializacao do contador de pulsos
+    contador = 0;
+    //atualizacao da variavel tempo_antes
+    tempo_antes = millis();
+    //contagem de pulsos do sensor
+    attachInterrupt(INTERRUPCAO_SENSOR, contador_pulso, FALLING);
+     mySerial.print(fluxo);
+  }
+  fluxoviagem = fluxo;
+  
+
+  
+//  mySerial.print(fluxo); // Envie a taxa de fluxo como uma string
 //   if (mySerial.available()) {
 //    Serial.write(mySerial.read());
 //  }
@@ -52,37 +84,48 @@ void loop() {
 //    mySerial.write(Serial.read());
 //  }
 if (mySerial.available()) {
-    // Lê e imprime os dados recebidos da porta SoftwareSerial
     int receivedNumber = mySerial.read();
     Serial.print("status feed: ");
     Serial.println(receivedNumber);
-//48 status botao ligado
     if (receivedNumber == 48) {
       if (digitalRead(RELAY_PIN) == LOW) {
+        Serial.print("biruleibe ");
+
         digitalWrite(RELAY_PIN, HIGH);
         Serial.print("liguei ");
       }
     }
-//49 status botao desligado
     if (receivedNumber == 49) {
       if (digitalRead(RELAY_PIN) == HIGH) {
+       Serial.print("biruleibe 2 ");
+
         digitalWrite(RELAY_PIN, LOW);
         Serial.print("desliguei ");
       }
     }
-//50 status botao desligado
-if (receivedNumber == 50) {
-    if (digitalRead(RELAY_PIN) == LOW && fluxoviagem > LIMITE_FLUXO) {
-        Serial.print(fluxoviagem);
-        digitalWrite(RELAY_PIN, HIGH);
-        Serial.println("Relé acionado devido à presença de fluxo no modo viagem");
-    }
-}
- if (receivedNumber == 51) {
-    if (digitalRead(RELAY_PIN) == HIGH) {
+    
+//-------MODO VIAGEM------
+
+    if (receivedNumber == 51) {
+      if (digitalRead(RELAY_PIN) == HIGH) {
+
         digitalWrite(RELAY_PIN, LOW);
-        Serial.print("desliguei ");
+        Serial.print("desliguei 51 ");
+      }
+    }
+   if (receivedNumber == 50){
+        if (digitalRead(RELAY_PIN) == LOW && fluxoviagem > LIMITE_FLUXO) {
+           Serial.print(fluxoviagem);
+                   Serial.print("biruleibe 3");
+           delay(1000);
+           digitalWrite(RELAY_PIN, HIGH);
+           Serial.println("Relé acionado devido à presença de fluxo no modo viagem");
+        }
       }
     }
   }
+
+
+void contador_pulso() {
+  contador++;
 }
