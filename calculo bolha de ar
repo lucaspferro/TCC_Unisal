@@ -1,0 +1,28 @@
+#define PI 3.14159
+
+// Função para calcular o volume da elipsoide
+float calcularVolumeElipsoide(float a, float b, float c) {
+  float volume = (4.0 / 3.0) * PI * a * b * c;
+  return volume;
+}
+
+
+void setup() {
+   Serial.begin(9600);
+
+  // Exemplo de cálculo do volume de uma elipsoide com semieixos 2, 3 e 4
+  float semieixoA = 0.00635;
+  float semieixoB = 0.00635;
+  float semieixoC = 0.000108335;
+
+  float volumeElipsoide = calcularVolumeElipsoide(semieixoA, semieixoB, semieixoC);
+
+  float fatorDeExibicao = 1e9; // Por exemplo, para exibir em mm^3 (milímetros cúbicos)
+  float volumeExibido = volumeElipsoide * fatorDeExibicao;
+
+  Serial.print("O volume da elipsoide é: ");
+  Serial.print(volumeExibido);
+  Serial.println(" mm^3");
+}
+
+void loop() {}
