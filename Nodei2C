@@ -1,4 +1,16 @@
 #include <SoftwareSerial.h>
+#include "AdafruitIO.h"
+#include "Adafruit_MQTT.h"
+#include "Adafruit_MQTT_Client.h"
+#include <ESP8266WiFi.h>
+#define PI 3.14159
+
+// Função para calcular o volume da elipsoide
+float calcularVolumeElipsoide(float a, float b, float c) {
+  float volume = (4.0 / 3.0) * PI * a * b * c;
+  return volume;
+}
+
 SoftwareSerial mySerial(D6, D7); // RX, TX
 
  
@@ -6,12 +18,12 @@ SoftwareSerial mySerial(D6, D7); // RX, TX
 //Insira seu nome de usuário e chave. Você encontra essas informações acessando
 //sua conta no Adafruit IO
 #define IO_USERNAME  "mhrunisal"
-#define IO_KEY       "aio_qReV49kJoX6kDWrPLwtMhsqHciDK"
+#define IO_KEY       "aio_xEZE43mTZqFXi2IQh7mVG0eLpblb"
  
 /******* Configuração do WIFI **************/
  
 //Insira o SSID e Senha da rede WIFI a qual você irá conectar
-#define WIFI_SSID "Sala-2"
+#define WIFI_SSID "Sala-2.4G"
 #define WIFI_PASS "gixpg300m" 
  
 /******Configurações do comunicaçaão*****/
@@ -25,8 +37,27 @@ AdafruitIO_WiFi io(IO_USERNAME, IO_KEY, WIFI_SSID, WIFI_PASS);
 AdafruitIO_Feed *feedRele1 = io.feed("Botao_valvula");
 AdafruitIO_Feed *feedmhr = io.feed("mhr");
 AdafruitIO_Feed *feedSensor_vazao = io.feed("Sensor_vazao");
+AdafruitIO_Feed *feedCalculo_vazao_corrente = io.feed("Calculo_vazao_corrente");
 
- 
+
+const int PINO_SENSOR = D2;
+unsigned long contador = 0;
+
+//definicao do fator de calibracao para conversao do valor lido
+const float FATOR_CALIBRACAO = 4.5;
+
+ //definicao das variaveis de fluxo e volume
+float fluxo = 0;
+float volume = 0;
+float volume_total = 0;
+
+//calculo bolha 
+float A = 0.00635, B = 0.00635, C, V;
+
+
+
+//definicao da variavel de intervalo de tempo
+unsigned long tempo_antes = 0;
  
 /******** Função setup ***********/
  
@@ -41,6 +72,9 @@ void setup() {
  
   conectaBroker(); //função para conectar ao broker
   mySerial.begin(115200);
+
+    //configuracao do pino do sensor como entrada em nivel logico alto
+  pinMode(PINO_SENSOR, INPUT_PULLUP);
  
 }
  
@@ -54,10 +88,66 @@ void loop() {
   if(state == AIO_NET_DISCONNECTED | state == AIO_DISCONNECTED){
     conectaBroker(); //função para conectar ao broker
   }
+  
+// executa a contagem de pulsos uma vez por segundo
+ // executa a contagem de pulsos uma vez por segundo
+  if((millis() - tempo_antes) > 1000){
+
+    //desabilita a interrupcao para realizar a conversao do valor de pulsos
+    detachInterrupt(digitalPinToInterrupt(PINO_SENSOR));
+    //conversao do valor de pulsos para L/min
+    fluxo = ((1000.0 / (millis() - tempo_antes)) * contador) / FATOR_CALIBRACAO;
+    //exibicao do valor de fluxo
+//    Serial.print("Fluxo de: ");
+//    Serial.print(fluxo);
+//    Serial.println(" L/min");
+    //calculo do volume em L passado pelo sensor
+    volume = fluxo / 60;
+    //armazenamento do volume
+    volume_total += volume;
+    //exibicao do valor de volume
+//    Serial.print("Volume: ");
+//    Serial.print(volume_total);
+//    Serial.println(" L");
+//    Serial.println();
+    //reinicializacao do contador de pulsos
+    contador = 0;
+    //atualizacao da variavel tempo_antes
+    tempo_antes = millis();
+    //contagem de pulsos do sensor
+   attachInterrupt(digitalPinToInterrupt(PINO_SENSOR), contador_pulso, FALLING);
+  }
+  delay(2500);
+  feedSensor_vazao->save(fluxo);
+  delay(1000);
+
+
+  
+  // Exemplo de cálculo do volume de uma elipsoide com semieixos 2, 3 e 4
+  float semieixoA = 0.00635;
+  float semieixoB = 0.00635;
+  float semieixoC = 0.000108335;
+
+  float volumeElipsoide = calcularVolumeElipsoide(semieixoA, semieixoB, semieixoC);
+
+  float fatorDeExibicao = 1e9; // Por exemplo, para exibir em mm^3 (milímetros cúbicos)
+  float volumeExibido = volumeElipsoide * fatorDeExibicao;
+
+  Serial.print("O volume da elipsoide é: ");
+  Serial.print(volumeExibido);
+  Serial.println(" mm^3");
+
+  delay(2500);
+  feedCalculo_vazao_corrente->save(volumeExibido);
+  delay(1000);
+  
+}
+
+ICACHE_RAM_ATTR void contador_pulso() {
+  contador++;
 }
  
 /** Função de tratamento dos dados recebidos em L1*******/
- 
 void handleRele1(AdafruitIO_Data *data) {
  
   // Mensagem
@@ -71,10 +161,7 @@ void handleRele1(AdafruitIO_Data *data) {
   mySerial.print(valorBotaoValvula);
   
   
-//  // Leia e retransmita a SoftwareSerial para a porta serial padrão
-  while (mySerial.available()) {
-    Serial.write(mySerial.read());
-  }
+
   
   // Leia e retransmita a porta serial padrão para SoftwareSerial
   while (Serial.available()) {
@@ -95,58 +182,15 @@ void modoviagem (AdafruitIO_Data *data) {
   mySerial.print(valormhr);
   
   
-  // Leia e retransmita a SoftwareSerial para a porta serial padrão
-  while (mySerial.available()) {
-    Serial.write(mySerial.read());
-  }
-  
   // Leia e retransmita a porta serial padrão para SoftwareSerial
   while (Serial.available()) {
     mySerial.write(Serial.read());
   }
   
-}
-void sensorfluxo(AdafruitIO_Data *data) {
- if(MySerial.available()){
-  String receivedData = mySerial.readStringUntil('/n');
+} 
 
-  if(receivedData.startWith("F:")){
-    float receivedFluxo = receivedData.substring(2).toFloat(); // Ignora os primeiros dois caracteres ("F:") e converte para float
-        Serial.print("Fluxo recebido: ");
-        Serial.println(receivedFluxo);
-        // Faça o que você precisa com a variável receivedFluxo
-    } else {
-        // Mensagem não reconhecida
-        Serial.print("Mensagem não reconhecida: ");
-        Serial.println(receivedData);
-    }
-  }
- }
-  // Mensagem
-//  Serial.print("Recebido mhr  <- ");
-//  Serial.print(data->feedName());
-//  Serial.print(" : ");
-//  int valormhr = atoi(data->value());
-//  Serial.println(valormhr);
-  
-  // Leia os dados da porta serial
-  float valorFluxo = mySerial.read();
-  
-  // Envie o valor do feed via SoftwareSerial
-     feedSensor_vazao->save("50");
-     Serial.print(valorFluxo);
-
-
-  
-  
-  // Leia e retransmita a SoftwareSerial para a porta serial padrão
-  while (mySerial.available()) {
-    Serial.write(mySerial.read());
-  }
- 
 /** Função para conectar ao WIFI e Broker*******/
- 
-void conectaBroker(){
+ void conectaBroker(){
  
   //mensagem inicial
   Serial.print("Conectando ao Adafruit IO");
@@ -157,7 +201,7 @@ void conectaBroker(){
    // instancia um novo handler para recepção da mensagem do feed Rele
   feedRele1->onMessage(handleRele1);
   feedmhr->onMessage(modoviagem);
-  feedSensor_vazao->onMessage(sensorfluxo);
+//  feedSensor_vazao->onMessage(sensorfluxo);
   // Aguarda conexação ser estabelecida
   while(io.status() < AIO_CONNECTED) {
     Serial.print(".");
