@@ -35,7 +35,7 @@ AdafruitIO_WiFi io(IO_USERNAME, IO_KEY, WIFI_SSID, WIFI_PASS);
  
 // configura o tópico "fs_embarcados/feeds/rele_1"
 AdafruitIO_Feed *feedRele1 = io.feed("Botao_valvula");
-AdafruitIO_Feed *feedmhr = io.feed("mhr");
+AdafruitIO_Feed *feedBotao_valvula = io.feed("Botao_valvula");
 AdafruitIO_Feed *feedSensor_vazao = io.feed("Sensor_vazao");
 AdafruitIO_Feed *feedCalculo_vazao_corrente = io.feed("Calculo_vazao_corrente");
 
@@ -117,6 +117,8 @@ void loop() {
     //contagem de pulsos do sensor
    attachInterrupt(digitalPinToInterrupt(PINO_SENSOR), contador_pulso, FALLING);
   }
+  fluxoferias = 2;
+  fluxo = fluxoferias;
   delay(2500);
   feedSensor_vazao->save(fluxo);
   delay(1000);
@@ -170,16 +172,22 @@ void handleRele1(AdafruitIO_Data *data) {
   
 }
 void modoviagem (AdafruitIO_Data *data) {
- 
+  
   // Mensagem
   Serial.print("Recebido mhr  <- ");
   Serial.print(data->feedName());
   Serial.print(" : ");
-  int valormhr = atoi(data->value());
-  Serial.println(valormhr);
-
+  int valorFerias = atoi(data->value());
+  Serial.println(valorFerias);
+  // valor 2 é o botao ligado na pagina 
+  if (valorFerias == 2 && fluxoferias > fluxo){
+    mySerial.print(valorFerias);
+  }
+   if (valorFerias == 3 ){
+    mySerial.print(valorFerias);
+  }
   // Envie o valor do feed via SoftwareSerial
-  mySerial.print(valormhr);
+  // mySerial.print(valormhr);
   
   
   // Leia e retransmita a porta serial padrão para SoftwareSerial
@@ -200,7 +208,7 @@ void modoviagem (AdafruitIO_Data *data) {
  
    // instancia um novo handler para recepção da mensagem do feed Rele
   feedRele1->onMessage(handleRele1);
-  feedmhr->onMessage(modoviagem);
+  feedBotao_valvula->onMessage(modoviagem);
 //  feedSensor_vazao->onMessage(sensorfluxo);
   // Aguarda conexação ser estabelecida
   while(io.status() < AIO_CONNECTED) {
@@ -214,6 +222,6 @@ void modoviagem (AdafruitIO_Data *data) {
  
   // certifique-se de que todos os feeds obtenham seus valores atuais imediatamente
   feedRele1->get();
-  feedmhr->get();
+  feedBotao_valvula>get();
 //  feedSensor_vazao->save();
 }
